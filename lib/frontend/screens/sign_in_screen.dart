@@ -4,6 +4,7 @@ import 'package:bloc_listener_tests/backend/blocs/authentication/authentication_
 import 'package:bloc_listener_tests/backend/blocs/authentication/authentication_event.dart';
 import 'package:bloc_listener_tests/backend/blocs/authentication/authentication_state.dart';
 import 'package:bloc_listener_tests/frontend/screens/dashboard_screen.dart';
+import 'package:bloc_listener_tests/frontend/util_widgets/loading_indicator.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -27,6 +28,9 @@ class SignInScreen extends StatelessWidget {
         key: Key('authenticationBlocBuilder'),
         bloc: authenticationBloc,
         builder: (context, state) {
+          if(state is AuthenticationInProgress) {
+            return LoadingIndicator();
+          }
           return Scaffold(
             key: Key('signInScaffold'),
             body: Center(

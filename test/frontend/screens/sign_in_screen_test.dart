@@ -1,9 +1,10 @@
-import 'package:bloc_test/bloc_test.dart';
 import 'package:bloc_listener_tests/backend/blocs/authentication/authentication_bloc.dart';
 import 'package:bloc_listener_tests/backend/blocs/authentication/authentication_event.dart';
 import 'package:bloc_listener_tests/backend/blocs/authentication/authentication_state.dart';
 import 'package:bloc_listener_tests/frontend/screens/dashboard_screen.dart';
 import 'package:bloc_listener_tests/frontend/screens/sign_in_screen.dart';
+import 'package:bloc_listener_tests/frontend/util_widgets/loading_indicator.dart';
+import 'package:bloc_test/bloc_test.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -31,9 +32,6 @@ void main() {
 
     subject = buildTestableWidget(SignInScreen(authenticationBloc: authenticationBlocMock),
         mockNavigatorObserver: mockNavigatorObserver);
-
-    // have to pass the initial state to the widget manually since it's a stub
-    whenListen(authenticationBlocMock, Stream.value(AuthenticationUninitialized()));
   });
 
   dartTest.tearDown(() {
@@ -45,11 +43,13 @@ void main() {
     final findScaffold = find.byKey(Key('signInScaffold'));
     final findTitleButtonOverlay = find.byKey(Key('titleButtonOverlay'));
     final findGoogleSignInButton = find.byKey(Key('signInGoogleButton'));
+    final findLoadingIndicator = find.byType(LoadingIndicator);
 
     testWidgets('Test Sign In Screen basic structure with AuthenticationUnitialized state',
         (WidgetTester tester) async {
       whenListen(authenticationBlocMock, Stream.value(AuthenticationUninitialized()));
 
+      expectLater(authenticationBlocMock, emitsInOrder([AuthenticationUninitialized()]));
       await tester.pumpWidget(subject);
 
       expect(findBlocBuilder, findsOneWidget);
@@ -68,31 +68,34 @@ void main() {
     });
 
     testWidgets(
-      'Test build with AuthenticationSuccess state should push /dashboard route',
+      'Test build with AuthenticationInProgress state should show LoadingIndicator',
+      (WidgetTester tester) async {
+        when(authenticationBlocMock.state)
+            .thenAnswer((_) => AuthenticationInProgress());
+
+        await tester.pumpWidget(subject);
+
+        expect(findLoadingIndicator, findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'Test build with AuthenticationSuccess state should show Dashboard',
       (WidgetTester tester) async {
         when(authenticationBlocMock.state)
             .thenAnswer((_) => AuthenticationSuccess(firebaseUser: firebaseUserMock));
 
-//        whenListen(
-//          authenticationBlocMock,
-//          Stream.fromIterable([AuthenticationSuccess(firebaseUser: firebaseUserMock)]),
-//        );
+        whenListen<AuthenticationEvent, AuthenticationState>(
+          authenticationBlocMock,
+          Stream.fromIterable([AuthenticationSuccess(firebaseUser: firebaseUserMock)]),
+        );
 
-//        dartTest.expectLater(authenticationBlocMock,
-//            emitsInOrder([AuthenticationSuccess(firebaseUser: firebaseUserMock)]));
+        expectLater(authenticationBlocMock,
+            emitsInOrder([AuthenticationSuccess(firebaseUser: firebaseUserMock)]));
 
         await tester.pumpWidget(subject);
-
-        await tester.pumpAndSettle();
         verify(mockNavigatorObserver.didPush(any, any));
-//        expect(find.byKey(Key('SignInBlocListener')), findsOneWidget);
 
-//      await tester.tap(findGoogleSignInButton);
-
-//      when(firebaseUserMock.displayName).thenReturn('Display Name');
-
-//      final List pushedRoute = verify(mockNavigatorObserver.didPush(captureAny, any)).captured;
-//      var result = pushedRoute. .currentResult.toString();
         expect(find.byType(DashboardScreen), findsOneWidget);
       },
     );
