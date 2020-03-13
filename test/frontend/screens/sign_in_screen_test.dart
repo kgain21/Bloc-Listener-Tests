@@ -70,8 +70,7 @@ void main() {
     testWidgets(
       'Test build with AuthenticationInProgress state should show LoadingIndicator',
       (WidgetTester tester) async {
-        when(authenticationBlocMock.state)
-            .thenAnswer((_) => AuthenticationInProgress());
+        when(authenticationBlocMock.state).thenAnswer((_) => AuthenticationInProgress());
 
         await tester.pumpWidget(subject);
 
@@ -82,18 +81,31 @@ void main() {
     testWidgets(
       'Test build with AuthenticationSuccess state should show Dashboard',
       (WidgetTester tester) async {
-        when(authenticationBlocMock.state)
-            .thenAnswer((_) => AuthenticationSuccess(firebaseUser: firebaseUserMock));
+        when(authenticationBlocMock.state).thenReturn(AuthenticationUninitialized());
+
+        await tester.pumpWidget(subject);
 
         whenListen<AuthenticationEvent, AuthenticationState>(
           authenticationBlocMock,
-          Stream.fromIterable([AuthenticationSuccess(firebaseUser: firebaseUserMock)]),
+          Stream.fromIterable([
+            AuthenticationInProgress(),
+            AuthenticationSuccess(firebaseUser: firebaseUserMock),
+          ]),
         );
 
-        expectLater(authenticationBlocMock,
-            emitsInOrder([AuthenticationSuccess(firebaseUser: firebaseUserMock)]));
+        expectLater(
+          authenticationBlocMock,
+          emitsInOrder([
+            AuthenticationInProgress(),
+            AuthenticationSuccess(firebaseUser: firebaseUserMock),
+          ]),
+        );
 
-        await tester.pumpWidget(subject);
+//        when(authenticationBlocMock.state)
+//            .thenAnswer((_) => AuthenticationSuccess(firebaseUser: firebaseUserMock));
+
+        await tester.pump();
+
         verify(mockNavigatorObserver.didPush(any, any));
 
         expect(find.byType(DashboardScreen), findsOneWidget);
