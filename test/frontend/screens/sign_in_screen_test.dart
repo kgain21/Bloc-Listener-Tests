@@ -79,10 +79,9 @@ void main() {
     );
 
     testWidgets(
-      'Test build with AuthenticationSuccess state should show Dashboard',
+      'Test listen for AuthenticationSuccess state should show Dashboard',
       (WidgetTester tester) async {
         when(authenticationBlocMock.state).thenReturn(AuthenticationUninitialized());
-
 
         whenListen<AuthenticationEvent, AuthenticationState>(
           authenticationBlocMock,
