@@ -83,7 +83,6 @@ void main() {
       (WidgetTester tester) async {
         when(authenticationBlocMock.state).thenReturn(AuthenticationUninitialized());
 
-        await tester.pumpWidget(subject);
 
         whenListen<AuthenticationEvent, AuthenticationState>(
           authenticationBlocMock,
@@ -101,6 +100,7 @@ void main() {
           ]),
         );
 
+        await tester.pumpWidget(subject);
 //        when(authenticationBlocMock.state)
 //            .thenAnswer((_) => AuthenticationSuccess(firebaseUser: firebaseUserMock));
 
