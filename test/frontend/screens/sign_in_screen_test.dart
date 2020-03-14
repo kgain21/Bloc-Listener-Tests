@@ -81,8 +81,6 @@ void main() {
     testWidgets(
       'Test listen for AuthenticationSuccess state should show Dashboard',
       (WidgetTester tester) async {
-        when(authenticationBlocMock.state).thenReturn(AuthenticationUninitialized());
-
         whenListen<AuthenticationEvent, AuthenticationState>(
           authenticationBlocMock,
           Stream.fromIterable([
@@ -91,23 +89,15 @@ void main() {
           ]),
         );
 
-        expectLater(
-          authenticationBlocMock,
-          emitsInOrder([
-            AuthenticationInProgress(),
-            AuthenticationSuccess(firebaseUser: firebaseUserMock),
-          ]),
-        );
-
         await tester.pumpWidget(subject);
-//        when(authenticationBlocMock.state)
-//            .thenAnswer((_) => AuthenticationSuccess(firebaseUser: firebaseUserMock));
 
-        await tester.pump();
+        await tester.pumpAndSettle();
 
         verify(mockNavigatorObserver.didPush(any, any));
 
         expect(find.byType(DashboardScreen), findsOneWidget);
+
+        await tester.pumpAndSettle();
       },
     );
 
